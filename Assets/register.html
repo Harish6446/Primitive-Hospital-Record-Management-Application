@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - MedSafe</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="wrapper">
+    <div class="container">
+        <h2>Register as an User</h2>
+        <form onsubmit="registerUser(event)">
+            E-mail: <input id="email" type="email" placeholder="xyz@example.com"><br><br>
+            Username: <input id="username" placeholder="String with alphanumerics" required><br><br>
+            Password: <input id="password" required><br><br>
+            Role: <select id="role" required>
+                <option value="doctor">Doctor</option>
+                <option value="nurse">Nurse</option>
+                <option value="patient">Patient</option>
+            </select><br><br>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <h3>Already have an account: </h3>
+        <button type="button" onclick="window.location.href='login.html'">Login</button>
+    </div>
+    </div>
+
+    <script>
+        async function registerUser(event) {
+            event.preventDefault();
+            const email = document.getElementById("email").value;
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const role = document.getElementById("role").value;
+
+            if (!username || !password || !role){
+                alert("Fill all the fields");
+                return;
+            }
+
+            const payload = {username, password, role};
+
+            if (email){
+                payload.email = email;
+            }
+
+            try {
+                const response = await fetch("http://localhost:7001/api/auth/register", {
+                    method: "POST", 
+                    headers: {"Content-Type": "application/json"}, 
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok){
+                    console.log("Registration Successful");
+                    window.location.replace("./login.html");
+                } else {
+                    alert(data.message || "Registration failed");
+                }
+
+            } catch (err) {
+                console.error(err);
+                console.log("Server error");
+            }
+        }
+    </script>
+</body>
+</html>

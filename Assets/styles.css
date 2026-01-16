@@ -1,0 +1,126 @@
+/* ===== Global Reset ===== */
+* {
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+}
+
+/* ===== Card Container ===== */
+.container {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    width: 100%;
+    max-width: 1000px;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    align-content: center;
+}
+
+.container button {
+    align-self: center;
+}
+
+/* ===== Headings ===== */
+h1, h2, h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #1e3c72;
+}
+
+/* ===== Forms ===== */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input, textarea, select {
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ===== Buttons ===== */
+button {
+    padding: 10px;
+    padding-left: 30px;
+    padding-right: 30px;
+    background: #1e3c72;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.3s;
+    justify-self: center;
+}
+
+button:hover {
+    background: #16325c;
+}
+
+/* ===== Links ===== */
+a {
+    text-decoration: none;
+}
+
+/* ===== Dashboard Records ===== */
+.record {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+    background: #f9f9f9;
+}
+
+/* ===== Logout Button ===== */
+.logout {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    padding-left: 30px;
+    padding-right: 30px;
+    align-self: center;
+    margin-top: 20px;
+    border: none;
+    background: #b00020;
+}
+
+.logout:hover {
+    background: #8b0018;
+}
+
+.wrapper {
+    width: 400px;
+    display: flex;
+    padding: 0px;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dashcontainer {
+    background: #ffffff;
+    width: 100%;
+    max-width: 1700px;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}

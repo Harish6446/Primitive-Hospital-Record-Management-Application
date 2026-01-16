@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MedSafe</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="wrapper">
+    <div class="dashcontainer">
+        <h1>Medical Records Dashboard</h1><br><br>
+
+        <div id="createSection" style="display: none;">
+            <h3>Create Medical Record</h3>
+            <form onsubmit="createRecord(event)">
+                Patient Username: <input id="patientName"><br><br>
+                Medical data: <textarea id="medicalData" required></textarea><br><br>
+
+                <button type="submit">Create Record</button>
+            </form>
+            <hr>
+        </div><br><br>
+    </div>
+
+    <div class="dashcontainer">
+        <div id="viewSection" style="display: none;">
+            <h3>View Medical Record</h3>
+            <form onsubmit="viewRecord(event)">
+                Patient Username: <input id="patientName2" required><br><br>
+
+                <button type="submit">Get Record</button>
+            </form>
+        </div><br><br>
+    
+        <div id="myRecord" style="display: none;">
+            <button onclick="myrecords()">Get Record</button>
+        </div>
+
+        <br><br><div id="viewArea"></div><br><br>
+    </div>
+
+    <div class="dashcontainer">
+        <button onclick="logout()" class="logout">Logout</button>
+    </div>
+    </div>
+
+    <script>
+        function parseJWT(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(atob(base64));
+        }
+        
+        token = localStorage.getItem("token");
+
+        if (!token){
+            alert("Not logged in");
+            window.location.href = "./login.html";
+        }
+
+        const payload = parseJWT(token);
+        const role = payload.role;
+
+        if (role === "doctor"){
+            document.getElementById("createSection").style.display = "block";
+        }
+
+        if (role === "doctor" || role === "nurse"){
+            document.getElementById("viewSection").style.display = "block";
+        }
+
+        if (role === "patient"){
+            document.getElementById("myRecord").style.display = "block";
+        }
+
+        async function createRecord(event){
+            event.preventDefault();
+
+            const patientName = document.getElementById("patientName").value;
+            const medicalData = document.getElementById("medicalData").value;
+            
+            try {
+                const response = await fetch("http://localhost:7001/api/auth/createRecord", {
+                    method: "POST", 
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + localStorage.getItem("token")
+                    }, 
+                    body: JSON.stringify({
+                        patientName, 
+                        medicalData
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok){
+                    alert(`Record creation for ${patientName} Successful`);
+                } else {
+                    alert(data.message || "Server error");
+                }
+            } catch(err) {
+                console.error(err);
+                console.log("Server Error");
+            }
+        }
+
+        async function viewRecord(event) {
+            event.preventDefault();
+
+            const patientName2 = document.getElementById("patientName2").value;
+
+            try {
+                const response = await fetch("http://localhost:7001/api/auth/viewRecord", {
+                    method: "POST", 
+                    headers: {
+                        "Content-Type": "application/json", 
+                        "Authorization": "Bearer " + localStorage.getItem("token")
+                    }, 
+                    body: JSON.stringify({patientName: patientName2})
+                });
+
+                const data = await response.json();
+                if (!response.ok){
+                    console.log(data.message || "Server error");
+                }
+
+                const area = document.getElementById("viewArea");
+                area.innerHTML = "";
+                data.forEach(r => {
+                    area.innerHTML += `
+                        <div style="border:1px solid #000; padding:10px; margin:10px;">
+                            <p><b>Patient: </b> ${r.patientName}</p>
+                            <p><b>Created By: </b> ${r.createdBy}</p>
+                            <p><b>Record: </b> ${r.medicalData}</p>
+                        </div>`;
+                })
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        function logout(){
+            localStorage.clear();
+            window.location.href = "./login.html";
+        }
+
+        async function myrecords(){
+            try {
+                const response = await fetch("http://localhost:7001/api/auth/myRecord", {
+                    method: "GET", 
+                    headers: {
+                        "Content-Type": "application/json", 
+                        "Authorization": "Bearer " + localStorage.getItem("token")
+                    }
+                });
+
+                const data = await response.json();
+                if (!response.ok){
+                    console.log(data.message || "Server error");
+                }
+
+                const area = document.getElementById("viewArea");
+                area.innerHTML = "";
+                data.forEach(r => {
+                    area.innerHTML += `
+                        <div style="border:1px solid #000; padding:10px; margin:10px;">
+                            <p><b>Patient: </b> ${r.patientName}</p>
+                            <p><b>Created By: </b> ${r.createdBy}</p>
+                            <p><b>Record: </b> ${r.medicalData}</p>
+                        </div>`;
+                })
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+    </script>
+</body>
+</html>

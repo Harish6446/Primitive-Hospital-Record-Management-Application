@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MedSafe</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="wrapper">
+    <div class="container">
+        <h2>Login</h2>
+        <form onsubmit="loginUser(event)">
+            Username: <input id="username" placeholder="String with alphanumerics" required><br><br>
+            Password: <input id="password" type="password" required><br><br>
+            <button type="submit">Login</button>
+        </form><br><br>
+    </div>
+    
+    <div class="container">
+        <h3>Forgot Password: </h3>
+        <button type="button" onclick="window.location.href='change.html'">Change Password</button>
+    </div>
+
+    <div class="container">
+        <h3>Do not have an account: </h3>
+        <button type="button" onclick="window.location.href='register.html'">Register</button>
+    </div>
+    </div>
+
+    <script>
+        async function loginUser(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (!username || !password){
+                alert("Fill all the fields");
+                return;
+            }
+            
+            try{
+                const response = await fetch("http://localhost:7001/api/auth/login", {
+                    method: "POST", 
+                    headers: {"Content-Type": "application/json"}, 
+                    body: JSON.stringify({
+                        username, 
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.otp){
+                        alert("Login successful and your OTP is " + data.otp);
+                        localStorage.setItem("otpUser", data.username);
+                        window.location.href = "./otp.html";
+                    } else {
+                        alert("OTP has been sent to your email");
+                        localStorage.setItem("otpUser", data.username);
+                        window.location.href = "./otp.html";
+                    }
+                } else {
+                    alert(data.message || "Invalid credentials");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Cannot connect to Server");
+            }
+        }
+    </script>
+</body>
+</html>

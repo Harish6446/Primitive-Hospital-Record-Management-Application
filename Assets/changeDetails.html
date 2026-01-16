@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Details - MedSafe</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="wrapper">
+    <div class="container">
+        <h2>Change Password</h2>
+        <form onsubmit="changePassword(event)">
+            New Password: <input placeholder="Enter new Password" id="newPass"><br><br>
+            <button type="submit">Change</button>
+        </form>
+    </div>
+    </div>
+
+    <script>
+        function parseJWT(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(atob(base64));
+        }
+        
+        token = localStorage.getItem("token");
+
+        if (!token){
+            alert("Not logged in");
+            window.location.href = "./login.html";
+        }
+
+        const payload = parseJWT(token);
+        const username = payload.username;
+
+        async function changePassword(event) {
+            event.preventDefault();
+
+            const newPass = document.getElementById("newPass").value;
+
+            if (!newPass) {
+                alert("Enter the new Password");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:7001/api/auth/changePassword", {
+                    method: "POST", 
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + localStorage.getItem("token")
+                    }, 
+                    body: JSON.stringify({newPass})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`Password changed for user ${username}`);
+                    window.location.href = "./login.html";
+                } else {
+                    alert(data.message || "Some Error Occured");
+                    window.location.href = "./login.html";
+                }
+            } catch(err) {
+                console.error(err);
+                console.log("Server Error");
+            }
+        }
+    </script>
+</body>
+</html>

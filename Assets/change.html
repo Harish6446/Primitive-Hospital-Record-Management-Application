@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Details - MedSafe</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="wrapper">
+    <div class="container">
+        <h2>Change Password</h2>
+
+        <form onsubmit="change(event)">
+            E-mail ID: <input id="email" placeholder="xyz@somemail.com" required>
+            <button type="submit">Send OTP</button>
+        </form>
+    </div>
+    </div>
+
+    <script>
+        async function change(event) {
+            event.preventDefault();
+
+            const email = document.getElementById("email").value;
+
+            if (!email){
+                alert("Fill all fields");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:7001/api/auth/change", {
+                    method: "POST", 
+                    headers: {"Content-Type": "application/json"}, 
+                    body: JSON.stringify({email})
+                });
+
+                const data = await response.json();
+
+                if (response.ok){
+                    alert("OTP has been sent to your email ID");
+                    localStorage.setItem("otpUser", data.username);
+                    window.location.href = "./otp2.html";
+                } else {
+                    alert(data.message || "Invalid Credentials");
+                }
+            } catch(err) {
+                console.error(err);
+                console.log("Cannot connect to Server");
+            }
+        }
+    </script>
+</body>
+</html>

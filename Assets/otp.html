@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="wrapper">
+    <div class="container">
+        <h2> OTP Verification </h2>
+        <form onsubmit="VerifyOTP(event)">
+            Enter OTP:
+            <input id="otp" type="text" placeholder="6-digit OTP" required><br><br>
+            <button type="submit">Verify</button>
+        </form>
+    </div>
+    </div>
+
+    <script>
+        async function VerifyOTP(event) {
+            event.preventDefault();
+
+            const otp = document.getElementById("otp").value;
+            const username = localStorage.getItem("otpUser");
+
+            if (!username){
+                alert("Session Expired. Please Login again");
+                window.location.href = "./login.html";
+                return;
+            }
+
+            if (!otp){
+                alert("Please enter OTP");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:7001/api/auth/verifyOtp", {
+                    method: "POST", 
+                    headers: {"Content-Type": "application/json"}, 
+                    body: JSON.stringify({
+                        username, 
+                        otp
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok){
+                    localStorage.setItem("token", data.token);
+                    alert("OTP verification is completed, logged in as " + data.username);
+                    window.location.replace("./dashboard.html");
+                } else {
+                    alert("Invalid or expired token");
+                    window.location.replace("./login.html");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Server error");
+            }
+        }
+    </script>
+</body>
+</html>
