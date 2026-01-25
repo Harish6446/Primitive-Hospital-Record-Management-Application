@@ -136,7 +136,7 @@
                         </div>`;
                 })
             } catch(err) {
-                console.error(err);
+                alert(err);
             }
         }
 
@@ -157,7 +157,7 @@
 
                 const data = await response.json();
                 if (!response.ok){
-                    console.log(data.message || "Server error");
+                    return console.log(data.message || "Server error");
                 }
 
                 const area = document.getElementById("viewArea");
@@ -171,7 +171,7 @@
                         </div>`;
                 })
             } catch(err) {
-                console.error(err);
+                alert(err);
             }
         }
 
