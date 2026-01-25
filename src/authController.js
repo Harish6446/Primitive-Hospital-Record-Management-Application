@@ -65,8 +65,8 @@ const register = async (req, res) => {
             return res.status(400).json({ message: "Required fields missing" });
         }
 
-        if (await User.findOne({username})){
-            return res.status(400).json({message: "Username already exists"});
+        if (await User.findOne({username: username, role: role})){
+            return res.status(400).json({message: "Username with this role already exists"});
         }
 
         const salt = await bcrypt.genSalt();
@@ -88,11 +88,11 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     try{
-        const {username, password} = req.body;
-        const user = await User.findOne({username});
+        const {username, password, role} = req.body;
+        const user = await User.findOne({username, role});
 
         if (!user){
-            return res.status(404).json({message: `User with username ${username} not found`});
+            return res.status(404).json({message: `${role} with username ${username} not found`});
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -119,13 +119,15 @@ const login = async (req, res) => {
             return res.status(200).json({
                 success: true, 
                 message: "OTP Generated", 
-                username
+                username, 
+                role
             });
         } else {
             return res.status(200).json({
                 success: true, 
                 message: "OTP Generated", 
                 username, 
+                role, 
                 otp
             });
         }
@@ -137,7 +139,7 @@ const login = async (req, res) => {
 
 const verifyOtp = async (req, res) => {
     try{
-        const {username, otp} = req.body;
+        const {username, role, otp} = req.body;
 
         const otpRecord = await OTP.findOne({username, otp});
         if (!otpRecord) {
@@ -147,7 +149,7 @@ const verifyOtp = async (req, res) => {
 
         await OTP.deleteOne({_id: otpRecord._id});
 
-        const user = await User.findOne({username});
+        const user = await User.findOne({username, role});
 
         const token = jwt.sign(
             {id: user._id, username: user.username, role: user.role}, 
@@ -202,7 +204,7 @@ const createRecord = async (req, res) => {
         const {encryptedData, iv} = encrypt(encoded);
         const signature = signData(encryptedData);
         
-        const patient = await User.findOne({patientName});
+        const patient = await User.findOne({username: patientName, role: 'patient'});
         if (patient){
             const encoded = encodeData(medicalData);
             const {encryptedData, iv} = encrypt(encoded);
@@ -321,15 +323,20 @@ const changePassword = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
+        
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(newPass, salt);
 
-        user.password = hashedPassword;
+        const result = await User.updateMany(
+            { username: username }, 
+            { $set: { password: hashedPassword } }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ message: "No user entries found to update" });
+        }
 
-        await user.save();
-
-        return res.status(200).json({message: `Password for ${username} has been changed`});
+        return res.status(200).json({message: `Password updated for ${result.modifiedCount} entries under username: ${username}`});
     } catch(err) {
         return res.status(500).json({message: `${err}`});
     }
