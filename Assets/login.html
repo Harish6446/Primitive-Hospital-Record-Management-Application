@@ -13,6 +13,11 @@
         <form onsubmit="loginUser(event)">
             Username: <input id="username" placeholder="String with alphanumerics" required><br><br>
             Password: <input id="password" type="password" required><br><br>
+            Role: <select id="role">
+                <option value="doctor">Doctor</option>
+                <option value="nurse">Nurse</option>
+                <option value="patient">Patient</option>
+            </select>
             <button type="submit">Login</button>
         </form><br><br>
     </div>
@@ -34,8 +39,9 @@
 
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
+            const role = document.getElementById("role").value;
 
-            if (!username || !password){
+            if (!username || !password || !role){
                 alert("Fill all the fields");
                 return;
             }
@@ -46,7 +52,8 @@
                     headers: {"Content-Type": "application/json"}, 
                     body: JSON.stringify({
                         username, 
-                        password
+                        password, 
+                        role
                     })
                 });
 
@@ -56,10 +63,12 @@
                     if (data.otp){
                         alert("Login successful and your OTP is " + data.otp);
                         localStorage.setItem("otpUser", data.username);
+                        localStorage.setItem("otpRole", data.role);
                         window.location.href = "./otp.html";
                     } else {
                         alert("OTP has been sent to your email");
                         localStorage.setItem("otpUser", data.username);
+                        localStorage.setItem("otpRole", data.role);
                         window.location.href = "./otp.html";
                     }
                 } else {
