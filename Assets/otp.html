@@ -24,6 +24,7 @@
 
             const otp = document.getElementById("otp").value;
             const username = localStorage.getItem("otpUser");
+            const role = localStorage.getItem("otpRole");
 
             if (!username){
                 alert("Session Expired. Please Login again");
@@ -42,6 +43,7 @@
                     headers: {"Content-Type": "application/json"}, 
                     body: JSON.stringify({
                         username, 
+                        role, 
                         otp
                     })
                 });
