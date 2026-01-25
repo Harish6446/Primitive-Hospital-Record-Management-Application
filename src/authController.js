@@ -113,7 +113,7 @@ const login = async (req, res) => {
             await transporter.sendMail({
                 from: 'medsafe6437@gmail.com', 
                 to: user.email, 
-                subject: "OTP Verification", 
+                subject: `OTP Verification for ${username}`, 
                 text: `Your OTP is ${otp}`
             });
             return res.status(200).json({
@@ -197,27 +197,29 @@ const verifyOtp2 = async (req, res) => {
 
 const createRecord = async (req, res) => {
     try {
-        if (req.user.role != "doctor"){
-            return res.status(403).json({ message: "Access denied" });
-        }
-
         const {patientName, medicalData} = req.body;
-
         const encoded = encodeData(medicalData);
-
         const {encryptedData, iv} = encrypt(encoded);
-
         const signature = signData(encryptedData);
-    
-        await Record.create({
-            patientName,
-            encryptedData,
-            iv,
-            signature,
-            createdBy: req.user.username
-        });
+        
+        const patient = await User.findOne({patientName});
+        if (patient){
+            const encoded = encodeData(medicalData);
+            const {encryptedData, iv} = encrypt(encoded);
+            const signature = signData(encryptedData);
+        
+            await Record.create({
+                patientName,
+                encryptedData,
+                iv,
+                signature,
+                createdBy: req.user.username
+            });
 
-        res.json({ message: "Record created" });
+            res.status(200).json({ message: "Record created" });
+        } else {
+            res.status(300).json({message: `Patient ${patientName} doen not exist`});
+        }
     } catch(err) {
         res.status(500).json({message: `${err}`});
     }
@@ -225,12 +227,9 @@ const createRecord = async (req, res) => {
 
 const viewRecord = async (req, res) => {
     try {
-        if (req.user.role === "patient"){
-            return res.status(403).json({ message: "Access denied" });
-        }
         const {patientName} = req.body;
-        const record = await Record.find({patientName});
 
+        const record = await Record.find({patientName});
         const output = record.map(r => {
             const decrypted = decrypt(r.encryptedData, r.iv);
             const decoded = decodeData(decrypted);
