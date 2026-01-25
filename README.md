@@ -6,7 +6,7 @@ This project uses NodeJS, ExpressJS, MongoDB as the architecture for building th
 
 The project encompasses the basics of CyberSecurity like Hashing with Salt, Encryption/Decryption, Encoding/Decoding, 2-Factor Authentication, Authorization of different users based on their role.
 
-The Authorization rules:
+The Access Control rules:
   Doctors can create new medical records for patients and view any past medical records.
   Nurses cannot create new medical records, but can view any past medical records.
   Patients cannot create new medical records and cannot view any past medical records, but they can view their medical record.
