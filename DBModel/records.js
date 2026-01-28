@@ -12,6 +12,11 @@ const recordScheme = new mongoose.Schema(
             required: true
         }, 
 
+        wrappedKey: {
+            type: String, 
+            required: true
+        }, 
+
         iv: {
             type: String, 
             required: true
