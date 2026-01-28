@@ -128,12 +128,19 @@
                 const area = document.getElementById("viewArea");
                 area.innerHTML = "";
                 data.forEach(r => {
-                    area.innerHTML += `
-                        <div style="border:1px solid #000; padding:10px; margin:10px;">
-                            <p><b>Patient: </b> ${r.patientName}</p>
-                            <p><b>Created By: </b> ${r.createdBy}</p>
-                            <p><b>Record: </b> ${r.medicalData}</p>
-                        </div>`;
+                    if (r.integrityStatus === "Verified"){
+                        area.innerHTML += `
+                            <div style="border:1px solid #000; padding:10px; margin:10px;">
+                                <p><b>Patient: </b> ${r.patientName}</p>
+                                <p><b>Created By: </b> ${r.createdBy}</p>
+                                <p><b>Record: </b> ${r.medicalData}</p>
+                            </div>`;
+                    } else {
+                        area.innerHTML += `
+                            <div style="border:1px solid #000; padding:10px; margin:10px;">
+                                <p><b>${r.medicalData}</p>
+                            </div>`;
+                    }
                 })
             } catch(err) {
                 alert(err);
@@ -163,17 +170,24 @@
                 const area = document.getElementById("viewArea");
                 area.innerHTML = "";
                 data.forEach(r => {
-                    area.innerHTML += `
-                        <div style="border:1px solid #000; padding:10px; margin:10px;">
-                            <p><b>Patient: </b> ${r.patientName}</p>
-                            <p><b>Created By: </b> ${r.createdBy}</p>
-                            <p><b>Record: </b> ${r.medicalData}</p>
-                        </div>`;
+                    if (r.integrityStatus === "Verified"){
+                        area.innerHTML += `
+                            <div style="border:1px solid #000; padding:10px; margin:10px;">
+                                <p><b>Patient: </b> ${r.patientName}</p>
+                                <p><b>Created By: </b> ${r.createdBy}</p>
+                                <p><b>Record: </b> ${r.medicalData}</p>
+                            </div>`;
+                    } else {
+                        area.innerHTML += `
+                            <div style="border:1px solid #000; padding:10px; margin:10px;">
+                                <p><b>${r.medicalData}</p>
+                            </div>`;
+                    }
                 })
             } catch(err) {
                 alert(err);
             }
-        }
+        };
 
     </script>
 </body>
