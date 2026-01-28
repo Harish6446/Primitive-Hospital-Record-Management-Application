@@ -12,6 +12,12 @@ const otpSchema = new mongoose.Schema({
         required: true
     },
 
+    role: {
+        type: String, 
+        required: false, 
+        enum: ["doctor", "nurse", "patient"]
+    }, 
+
     createdAt: {
         type: Date,
         default: Date.now,
