@@ -6,57 +6,10 @@ const nodemailer = require("nodemailer");
 const User = require("../DBModel/user.js");
 const OTP = require("../DBModel/OTP.js");
 const Record = require("../DBModel/records.js");
+const {encodeData, decodeData, encrypt, decrypt, signData, verifySignature, transporter, wrapKey, unwrapKey} = require("./helperFuncs.js");
 
 
-
-function encodeData(data) {
-    return Buffer.from(data, "utf8").toString("base64");
-}
-
-function decodeData(encoded) {
-    return Buffer.from(encoded, "base64").toString("utf8");
-}
-
-const algorithm = "aes-256-cbc";
-const SECRET_KEY = crypto.createHash("sha256").update("medical-secret").digest();
-
-function encrypt(text) {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(algorithm, SECRET_KEY, iv);
-    let encrypted = cipher.update(text, "utf8", "hex");
-    encrypted += cipher.final("hex");
-    return { encryptedData: encrypted, iv: iv.toString("hex") };
-}
-
-function decrypt(encrypted, iv) {
-    const decipher = crypto.createDecipheriv(
-        algorithm,
-        SECRET_KEY,
-        Buffer.from(iv, "hex")
-    );
-    let decrypted = decipher.update(encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-    return decrypted;
-}
-
-function signData(data) {
-    return crypto
-        .createHmac("sha256", "sign-secret")
-        .update(data)
-        .digest("hex");
-}
-
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail', 
-    auth: {
-        user: 'medsafe6437@gmail.com', 
-        pass: 'rzgdvnprcmsokxgw'
-    }
-});
-
-
-
+// Registering a new User
 const register = async (req, res) => {
     try{
         const {email, username, password, role} = req.body;
@@ -86,6 +39,9 @@ const register = async (req, res) => {
     }
 };
 
+
+
+// Logging in already existing user
 const login = async (req, res) => {
     try{
         const {username, password, role} = req.body;
@@ -105,8 +61,9 @@ const login = async (req, res) => {
         await OTP.deleteMany({ username });
         
         await OTP.create({
-            username, 
-            otp
+            username: username, 
+            otp: otp, 
+            role: role
         });
         
         if (user.email){
@@ -137,11 +94,14 @@ const login = async (req, res) => {
     }
 };
 
+
+
+// Verifying OTP for 2-Factor authentication during login
 const verifyOtp = async (req, res) => {
     try{
         const {username, role, otp} = req.body;
 
-        const otpRecord = await OTP.findOne({username, otp});
+        const otpRecord = await OTP.findOne({username, role, otp});
         if (!otpRecord) {
             await OTP.deleteMany({username});
             return res.status(400).json({message: "Invalid username or expired OTP, returning to login page"});
@@ -167,6 +127,9 @@ const verifyOtp = async (req, res) => {
     }
 };
 
+
+
+// Verifying OTP for 2-Factor authentication during password change
 const verifyOtp2 = async (req, res) => {
     try {
         const {username, otp} = req.body;
@@ -197,24 +160,27 @@ const verifyOtp2 = async (req, res) => {
     }
 };
 
+
+
+// Create a new medical record for a existing patient
 const createRecord = async (req, res) => {
     try {
         const {patientName, medicalData} = req.body;
-        const encoded = encodeData(medicalData);
-        const {encryptedData, iv} = encrypt(encoded);
-        const signature = signData(encryptedData);
         
         const patient = await User.findOne({username: patientName, role: 'patient'});
         if (patient){
+            const key = crypto.randomBytes(32);
             const encoded = encodeData(medicalData);
-            const {encryptedData, iv} = encrypt(encoded);
+            const {encryptedData, iv} = encrypt(encoded, key);
+            const wrappedKey = wrapKey(key);
             const signature = signData(encryptedData);
         
             await Record.create({
                 patientName,
                 encryptedData,
+                wrappedKey, 
                 iv,
-                signature,
+                signature: signature,
                 createdBy: req.user.username
             });
 
@@ -227,19 +193,33 @@ const createRecord = async (req, res) => {
     }
 };
 
+
+
+// View medical records of existing patients
 const viewRecord = async (req, res) => {
     try {
         const {patientName} = req.body;
 
         const record = await Record.find({patientName});
         const output = record.map(r => {
-            const decrypted = decrypt(r.encryptedData, r.iv);
-            const decoded = decodeData(decrypted);
+            const isAuthentic = verifySignature(r.encryptedData, r.signature);
+            if (!isAuthentic){
+                return {
+                    patientName: r.patientName, 
+                    medicalData: "ERROR: Data tampering detected! integrity check failed", 
+                    createdBy: r.createdBy, 
+                    integrityStatus: "Compromised"
+                };
+            }
 
+            const key = unwrapKey(r.wrappedKey);
+            const decrypted = decrypt(r.encryptedData, r.iv, key);
+            const decoded = decodeData(decrypted);
             return {
                 patientName: r.patientName, 
                 medicalData: decoded, 
-                createdBy: r.createdBy
+                createdBy: r.createdBy, 
+                integrityStatus: "Verified"
             };
         });
 
@@ -249,6 +229,9 @@ const viewRecord = async (req, res) => {
     }
 }
 
+
+
+// Patient viewing his record
 const myRecord = async (req, res) => {
     try {
         const patientName = req.user.username;
@@ -256,13 +239,24 @@ const myRecord = async (req, res) => {
         const record = await Record.find({patientName});
 
         const output = record.map(r => {
-            const decrypted = decrypt(r.encryptedData, r.iv);
-            const decoded = decodeData(decrypted);
+            const isAuthentic = verifySignature(r.encryptedData, r.signature);
+            if (!isAuthentic){
+                return {
+                    patientName: r.patientName, 
+                    medicalData: "ERROR: Record tampering detected, integrity check failed", 
+                    createdBy: r.createdBy, 
+                    integrityStatus: "Compromised"
+                };
+            }
 
+            const key = unwrapKey(r.wrappedKey);
+            const decrypted = decrypt(r.encryptedData, r.iv, key);
+            const decoded = decodeData(decrypted);
             return {
                 patientName: r.patientName, 
                 medicalData: decoded, 
-                createdBy: r.createdBy
+                createdBy: r.createdBy, 
+                integrityStatus: "Verified"
             };
         });
 
@@ -273,6 +267,8 @@ const myRecord = async (req, res) => {
 }
 
 
+
+// Password Change process upto sending OTP
 const change = async (req, res) => {
     try {
         const {email} = req.body;
@@ -310,6 +306,8 @@ const change = async (req, res) => {
 }
 
 
+
+// Password changing process - After verifying OTP
 const changePassword = async (req, res) => {
     try {
         const {newPass} = req.body;
@@ -343,8 +341,8 @@ const changePassword = async (req, res) => {
 }
 
 
-// Testing Functions
 
+// Testing Functions during development
 const getdb = async (req, res) => {
     try{
         const users = await User.find();
