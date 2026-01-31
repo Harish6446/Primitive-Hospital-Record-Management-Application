@@ -30,7 +30,6 @@ To run the code,
   10) Set the password for the database user.
   11) Get the connection string for the database.
   12) Fill that connection string in the <b>CONNECTION_STRING</b> field of the <b>.env</b> file.
-      The connection string looks something like this, 
 
 
   13) If you have installed nodemon, in the <b>package.json</b> file, in the scripts field add <b>"dev": "nodemon src/server.js"</b>, you can use any string in the place of <b>"dev"</b>
