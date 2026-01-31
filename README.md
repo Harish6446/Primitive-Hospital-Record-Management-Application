@@ -16,7 +16,7 @@ To run the code,
   1) Open a terminal, and type <b>npm init -y</b>
 
 
-  3) Then type the required libraries (express, mongoose, bcrypt, crypto, nodemailer, dotenv, jsonwebtoken) using the <b>npm install [LIBRARY_1], [LIBRARY_2], ...</b>
+  3) Then type the required libraries (express, mongoose, bcrypt, crypto, nodemailer, dotenv, jsonwebtoken) using the <b>npm install [LIBRARY_1] [LIBRARY_2] ...</b>
 
 
   4) (OPTIONAL) Can install nodemon library as a development dependency using <b>npm install nodemon --save-dev</b>
